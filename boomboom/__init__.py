@@ -1,3 +1,3 @@
 class AbstractModel(object):
-    def step(crank_degree):
+    def step(self, crank_degree, time_step):
         raise NotImplementedError()
