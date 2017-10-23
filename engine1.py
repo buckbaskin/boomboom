@@ -55,7 +55,7 @@ if __name__ == '__main__':
     # fig = plt.figure()
     # ax = plt.axes()
 
-    plt.plot(np.array(S))
+    plt.plot(np.array(angle), np.array(S))
     # plt.plot(angle, V)
     # plt.plot(angle, A)
     plt.show()
