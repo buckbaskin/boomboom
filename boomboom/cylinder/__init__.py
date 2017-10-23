@@ -20,8 +20,9 @@ class KinematicCylinderModel(AbstractCylinderModel):
         # crank orientation in radians, with 0.0 = TDC for front piston
 
     def lin_position(self, crank_orientation):
-        return (crank_radius * (1 - cos(crank_orientation)) + 
+        val = (crank_radius * (1 - cos(crank_orientation)) + 
             crank_ratio / 2 * crank_radius * sin(crank_orientation)**2)
+        return val
 
     def lin_velocity(self, crank_orientation, crank_vel):
         return (crank_vel*crank_radius*sin(crank_orientation) * 
@@ -45,6 +46,6 @@ class KinematicCylinderModel(AbstractCylinderModel):
         self.lin_v = avg_vel
         self.lin_a = avg_accel
         # print(self.lin_a)
-        self.crank_orientation = new_orientation
+        self.piston_orientation = new_orientation
 
 
