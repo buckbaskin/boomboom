@@ -77,15 +77,17 @@ if __name__ == '__main__':
     # plt.xlabel('Crankshaft angle, first piston (radians)')
     # plt.ylabel('Distance from cylinder roof (cm)')
     
-    V = V / 100
-    Vi = Vi / 100
-    plt.plot(angle, V)
-    plt.plot(angle, Vi)
-    plt.xlabel('Crankshaft angle, first piston (radians)')
-    plt.ylabel('Velocity (m / sec)')
-    
-    # plt.plot(angle, A)
+    # V = V / 100
+    # Vi = Vi / 100
+    # plt.plot(angle, V)
     # plt.plot(angle, Vi)
     # plt.xlabel('Crankshaft angle, first piston (radians)')
-    # plt.ylabel('Distance from cylinder roof (cm)')
+    # plt.ylabel('Velocity (m / sec)')
+    
+    A = A / 100
+    Ai = Ai / 100
+    plt.plot(angle, A)
+    plt.plot(angle, Ai)
+    plt.xlabel('Crankshaft angle, first piston (radians)')
+    plt.ylabel('Distance from cylinder roof (m / sec**2)')
     plt.show()

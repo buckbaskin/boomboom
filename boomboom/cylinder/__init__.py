@@ -39,8 +39,7 @@ class KinematicCylinderModel(AbstractCylinderModel):
         new_orientation = self.piston_orientation + crank_step
 
         avg_vel = (self.lin_position(new_orientation) - self.lin_position(old_orientation)) / time_step
-        avg_accel = ((self.lin_velocity(new_orientation, rad_per_sec) -
-            self.lin_velocity(old_orientation, rad_per_sec)) / time_step)
+        avg_accel = (self.lin_velocity(new_orientation, rad_per_sec) - self.lin_velocity(old_orientation, rad_per_sec)) / time_step
 
         self.lin_s = (self.lin_position(new_orientation) + self.lin_position(old_orientation)) / 2
         self.lin_v = avg_vel
