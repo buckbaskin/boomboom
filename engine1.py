@@ -50,12 +50,21 @@ if __name__ == '__main__':
         angle.append(angle[-1] + step_angle)
         time.append(time[-1] + step_time)
 
+
+    S = np.array(S)
+    V = np.array(V)
+    A = np.array(A)
+    angle = np.array(angle)
+    time = np.array(time)
+    
     print('render steps')
 
     # fig = plt.figure()
     # ax = plt.axes()
 
-    plt.plot(np.array(angle), np.array(V))
+    plt.plot(angle, S)
+    plt.xlabel('Crankshaft angle, first piston (radians)')
+    plt.ylabel('Distance from cylinder roof')
     # plt.plot(angle, V)
     # plt.plot(angle, A)
     plt.show()
