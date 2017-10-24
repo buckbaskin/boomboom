@@ -61,6 +61,9 @@ if __name__ == '__main__':
     S = np.array(S)
     V = np.array(V)
     A = np.array(A)
+    Si = np.array(Si)
+    Vi = np.array(Vi)
+    Ai = np.array(Ai)
     angle = np.array(angle)
     time = np.array(time)
     
@@ -74,10 +77,12 @@ if __name__ == '__main__':
     # plt.xlabel('Crankshaft angle, first piston (radians)')
     # plt.ylabel('Distance from cylinder roof (cm)')
     
+    V = V / 100
+    Vi = Vi / 100
     plt.plot(angle, V)
     plt.plot(angle, Vi)
     plt.xlabel('Crankshaft angle, first piston (radians)')
-    plt.ylabel('Velocity (cm / sec)')
+    plt.ylabel('Velocity (m / sec)')
     
     # plt.plot(angle, A)
     # plt.plot(angle, Vi)
