@@ -1,0 +1,57 @@
+      PROGRAM CALCULATE
+      INTEGER I, CONFLEN, THETA_STEPS
+      REAL MATRIX(100), DISP, NCYL, CR, B2S, CRANKRATIO
+      REAL PI, VPC, VCC, CRANKRADIUS, BORE, STROKE
+      REAL OMEGA_LOW, OMEGA_HIGH, THETA_STEP_SIZE, A, B, C, COUNTER
+      REAL V_LOW(500), V_HIGH(500), S(500), THETA(500)
+      REAL V_MEAN, V_MAX
+      PARAMETER(PI = 3.1415926525)
+      PARAMETER(OMEGA_LOW = 800)   !(THIS IS IN RPM)
+      PARAMETER(OMEGA_HIGH = 5000) !(THIS IS IN RPM)
+      PARAMETER(DISP = 0.0016)
+      PARAMETER(NCYL = 4)
+      PARAMETER(B2S=0.87)
+      PARAMETER(CR = 10)
+      PARAMETER(CRANKRATIO = 0.25)
+      open(10,file='s.out')
+      open(11,file='v.out')
+C-----"CALCULATING DERIVED VALUES FROM CONFIG FILE"--------------------C
+      VPC = DISP/NCYL
+      VCC = VPC/(CR-1)
+      STROKE = ((4*VPC)/(PI*(B2S*B2S)))**(1.0/3.0)
+      BORE = STROKE * B2S
+      CRANKRADIUS = STROKE/2
+      THETA = (PI/2)
+C-----"CALCULATE PISTON DISPLACEMENT FROM TDC"-------------------------C
+      THETA_STEPS = 500
+      THETA_STEP_SIZE = (2*PI)/(THETA_STEPS)
+      counter = 0.0
+      DO 11 I = 1,THETA_STEPS
+        COUNTER = COUNTER + 1.0
+        THETA(I) = (counter/THETA_STEPS)*2*PI  
+        A = CRANKRADIUS*(1-COS(THETA(I)))
+        B = (CRANKRATIO/2)*CRANKRADIUS*((SIN(THETA(I)))**2.0)
+        S(I) = A + B
+        A = (OMEGA_LOW*(2*PI/60))*CRANKRADIUS*SIN(THETA(I))
+        B = 1 + CRANKRATIO*COS(THETA(I))
+        V_LOW(I) = A*B
+        A = (OMEGA_HIGH*(2*PI/60))*CRANKRADIUS*(1-COS(THETA(I)))
+        B = 1 + CRANKRATIO*COS(THETA(I))
+        V_HIGH(I) = A*B
+        WRITE(10,*) THETA(I)*(180/PI)," ",S(I)
+        WRITE(11,*) THETA(I)*(180/PI)," ",V_HIGH(I)
+11    CONTINUE
+      CLOSE(10,STATUS='KEEP')
+      CLOSE(11,STATUS='KEEP')
+      V_MAX = 0
+      V_MEAN = 0
+      DO 12 I = 1, THETA_STEPS
+        IF (V_HIGH(I).GT.V_MAX) THEN
+          V_MAX = V_HIGH(I)
+        END IF
+        V_MEAN = V_MEAN + V_HIGH(I) 
+12    CONTINUE
+      V_MEAN = V_MEAN/500
+      PRINT*, "MEAN PISTON SPEED IS ", V_MEAN
+      PRINT*, "MAX PISTON SPEED IS ", V_MAX
+      END
