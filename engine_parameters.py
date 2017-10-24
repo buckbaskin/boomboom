@@ -8,7 +8,7 @@ total_displacement = 1340 # cc
 num_cylinders = 4
 disp_per_cylinder = total_displacement / num_cylinders # cubic centimeters
 
-piston_orientation = [0, 2 * pi / 3, 4 * pi / 3]
+piston_orientation = [0, 0, 0, 0]
 
 bore_to_stroke = 81.0 / 65.0
 

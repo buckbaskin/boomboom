@@ -29,17 +29,26 @@ class KinematicCylinderModel(AbstractCylinderModel):
             (1 + crank_ratio * cos(crank_orientation)))
 
     def lin_accel(self, crank_orientation, crank_vel):
-        return (crank_vel**2 * crank_ratio *
-            (cos(crank_orientation) + crank_ratio* cos(2 * crank_orientation)))
+        i = crank_vel**2 * crank_radius
+        j = cos(crank_orientation)
+        k = crank_ratio * cos(2 * crank_orientation)
+        return i * (j + k)
 
     def step(self, crank_step, time_step):
-        deg_per_sec = crank_step / time_step
-        rad_per_sec = deg_per_sec / 180 * pi
+        rad_per_sec = crank_step / time_step
         old_orientation = self.piston_orientation
         new_orientation = self.piston_orientation + crank_step
 
         avg_vel = (self.lin_position(new_orientation) - self.lin_position(old_orientation)) / time_step
-        avg_accel = (self.lin_velocity(new_orientation, rad_per_sec) - self.lin_velocity(old_orientation, rad_per_sec)) / time_step
+        # print('---\navg_vel %s' % avg_vel)
+        lv1 = self.lin_velocity(new_orientation, rad_per_sec)
+        lv2 = self.lin_velocity(old_orientation, rad_per_sec)
+        # print('lin_vel 1 %s' % lv1)
+        # print('lin_vel 2 %s' % lv2)
+        # print('time step %s' % time_step)
+        avg_accel = (lv1 - lv2) / time_step
+        # print('avg_accel %s' % avg_accel)
+        i_accel = self.lin_accel(new_orientation, rad_per_sec)
 
         self.lin_s = (self.lin_position(new_orientation) + self.lin_position(old_orientation)) / 2
         self.lin_v = avg_vel
