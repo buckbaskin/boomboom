@@ -12,7 +12,6 @@ class KinematicCylinderModel(AbstractCylinderModel):
         self.piston_orientation = np.array(piston_orientation)
 
         # flat roof assumption
-        self.clearance = combustion_chamber_volume / (cylinder_radius**2 * pi)
         self.lin_s = self.lin_position(self.piston_orientation)
         self.lin_v = 0.0
         self.lin_a = 0.0
@@ -22,6 +21,7 @@ class KinematicCylinderModel(AbstractCylinderModel):
     def lin_position(self, crank_orientation):
         val = (crank_radius * (1 - cos(crank_orientation)) + 
             crank_ratio / 2 * crank_radius * sin(crank_orientation)**2)
+        val += combustion_chamber_height
         return val
 
     def lin_velocity(self, crank_orientation, crank_vel):
@@ -42,7 +42,7 @@ class KinematicCylinderModel(AbstractCylinderModel):
         avg_accel = (self.lin_velocity(new_orientation, rad_per_sec) -
             self.lin_velocity(old_orientation, rad_per_sec) / time_step)
 
-        self.lin_s = (self.lin_position(new_orientation) + self.lin_position(old_orientation)) / 2 + self.clearance
+        self.lin_s = (self.lin_position(new_orientation) + self.lin_position(old_orientation)) / 2
         self.lin_v = avg_vel
         self.lin_a = avg_accel
         # print(self.lin_a)

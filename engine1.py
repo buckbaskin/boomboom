@@ -34,21 +34,28 @@ if __name__ == '__main__':
     step_time = step_angle / rad_per_sec
 
     S = [0.0]
+    Si = [0.0]
     V = [0.0]
+    Vi = [0.0]
     A = [0.0]
+    Ai = [0.0]
     angle = [0.0]
     time = [0.0]
 
     print('simulate steps')
 
-    for _ in range(0, num_steps):
-        e.step(step_angle, step_time)
+    for i in range(0, num_steps):
+        e._cylinder.step(step_angle, step_time)
 
-        S.append(e._cylinder.lin_s[0])
-        V.append(e._cylinder.lin_v[0])
-        A.append(e._cylinder.lin_a[0])
         angle.append(angle[-1] + step_angle)
         time.append(time[-1] + step_time)
+
+        S.append(e._cylinder.lin_s[0])
+        Si.append(e._cylinder.lin_position(angle[-1]))
+        V.append(e._cylinder.lin_v[0])
+        Vi.append(e._cylinder.lin_velocity(angle[-1], rad_per_sec))
+        A.append(e._cylinder.lin_a[0])
+        Ai.append(e._cylinder.lin_accel(angle[-1], rad_per_sec))
 
 
     S = np.array(S)
@@ -62,9 +69,18 @@ if __name__ == '__main__':
     # fig = plt.figure()
     # ax = plt.axes()
 
-    plt.plot(angle, S)
+    # plt.plot(angle, S)
+    # plt.plot(angle, Si)
+    # plt.xlabel('Crankshaft angle, first piston (radians)')
+    # plt.ylabel('Distance from cylinder roof (cm)')
+    
+    plt.plot(angle, V)
+    plt.plot(angle, Vi)
     plt.xlabel('Crankshaft angle, first piston (radians)')
-    plt.ylabel('Distance from cylinder roof')
-    # plt.plot(angle, V)
+    plt.ylabel('Velocity (cm / sec)')
+    
     # plt.plot(angle, A)
+    # plt.plot(angle, Vi)
+    # plt.xlabel('Crankshaft angle, first piston (radians)')
+    # plt.ylabel('Distance from cylinder roof (cm)')
     plt.show()
