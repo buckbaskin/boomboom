@@ -2,6 +2,8 @@ from math import pi
 
 from numpy import sin, cos
 
+### Cylinder ###
+
 # Params from a Huyabusa
 
 total_displacement = 1340 # cc
@@ -34,3 +36,5 @@ compression_ratio = 12.5
 combustion_chamber_volume = disp_per_cylinder / (compression_ratio - 1)
 
 combustion_chamber_height = combustion_chamber_volume / (pi * (bore / 2)**2)
+
+### Valves ###
