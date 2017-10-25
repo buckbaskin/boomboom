@@ -20,12 +20,14 @@ class IntakeValveRecorderModel(AbstractModel):
         self.intake_temp = input_temp
 
     def request_airflow(self, requested_kg, time_step):
+        # TODO(buckbaskin): redo max as compressible air calculations
         max_airflow_area = max_valve_lift * pi * intake_valve_diameter * num_intake_valves
         max_airflow_volume_cm = max_airflow_area * speed_of_sound
         density = self.intake_pressure / (R * self.intake_temp)
         max_airflow_volume_m = max_airflow_volume_cm / (100**3)
         max_airflow_mass = max_airflow_volume_m * density
 
+        # TODO(buckbaskin): redo max as compressible air calculations
         last_af_area = self.cam_profile['cam_lift'][-1] * pi * intake_valve_diameter * num_intake_valves
         last_af_volume_cm = last_af_area * speed_of_sound
         density = self.intake_pressure / (R * self.intake_temp)
@@ -43,6 +45,7 @@ class IntakeValveRecorderModel(AbstractModel):
         old_orientation = self.cam_orientation
         new_orientation = self.cam_orientation + cam_step
 
+        # TODO(buckbaskin): redo max as compressible air calculations
         density = self.intake_pressure / (R * self.intake_temp)
         airflow_volume_m = airflow_mass / density
         airflow_volume_cm = airflow_volume_m * (100**3)
@@ -52,7 +55,8 @@ class IntakeValveRecorderModel(AbstractModel):
 
         last_lift = self.cam_profile['cam_lift'][-1]
         next_lift = 2 * simulated_avg_lift - last_lift
-        next_lift = np.maximum(next_lift, np.zeros(next_lift.shape))
+        next_lift = np.maximum(next_lift, np.ones(next_lift.shape) * min_valve_lift)
+        next_lift = np.minimum(next_lift, np.ones(next_lift.shape) * max_valve_lift)
 
         print('last %.2f > sim %.2f > next %.2f' % (last_lift[1], simulated_avg_lift[1], next_lift[1],))
 
