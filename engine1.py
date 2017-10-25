@@ -4,13 +4,13 @@ from boomboom.intake import *
 from boomboom.exhaust import *
 from boomboom.sensor import SVASensor
 
-print('load pyplot')
-
-import matplotlib
-matplotlib.use('Qt5Agg')
-import matplotlib.pyplot as plt
-
-print('done loading dependencies')
+# print('load pyplot')
+# 
+# import matplotlib
+# matplotlib.use('Qt5Agg')
+# import matplotlib.pyplot as plt
+# 
+# print('done loading dependencies')
 
 class Engine(AbstractModel):
     def __init__(self, intake, cylinder, exhaust, sensor):
@@ -63,5 +63,5 @@ if __name__ == '__main__':
 
     e._sensor.summary()
     # e._sensor.plot()
-    e._intake.plot()
+    # e._intake.plot()
     e._intake.save()
