@@ -109,17 +109,11 @@ def plot_V(angle, lift, projection='polar'):
 
 def numerical_accel(angle, lift):
     x = angle
-    y = lift
-    
+    y = numerical_vel(angle, lift)
     dy = np.zeros(y.shape,np.float)
     dy[0:-1] = np.diff(y)/np.diff(x)
     dy[-1] = (y[-1] - y[-2])/(x[-1] - x[-2])
-
-    ddy = np.zeros(y.shape,np.float)
-    ddy[0:-1] = np.diff(dy)/np.diff(x)
-    ddy[-1] = (dy[-1] - dy[-2])/(x[-1] - x[-2])
-
-    return ddy
+    return dy
 
 def plot_A(angle, lift, projection='polar'):
     ax = plt.subplot(111, projection=projection)
@@ -138,11 +132,22 @@ def plot_A(angle, lift, projection='polar'):
 
     plt.show()
 
-def plot_SVA(angle, lift, projection='polar'):
+def numerical_jerk(angle, lift):
+    x = angle
+    y = numerical_accel(angle, lift)
+    
+    dy = np.zeros(y.shape,np.float)
+    dy[0:-1] = np.diff(y)/np.diff(x)
+    dy[-1] = (y[-1] - y[-2])/(x[-1] - x[-2])
+
+    return dy
+
+def plot_SVAJ(angle, lift, projection='polar'):
     ax = plt.subplot(111, projection=projection)
     ax.plot(angle, lift, 'r')
     ax.plot(angle, numerical_vel(angle, lift), 'g')
     ax.plot(angle, numerical_accel(angle, lift), 'b')
+    ax.plot(angle, numerical_jerk(angle, lift), 'xkcd:sky blue')
     
     if projection == 'polar':
         ax.set_theta_zero_location("N")
@@ -154,6 +159,12 @@ def plot_SVA(angle, lift, projection='polar'):
         ax.set_rlabel_position(-22.5)  # get radial labels away from plotted line
         ax.grid(True)
 
+    else:
+        ax.set_xlabel('Cam rotation (radians)')
+        ax.set_ylim([-20, 20])
+        ax.set_ylabel('SVAJ (cm, cm/sec, cm/sec**2, cm/sec**3)')
+        ax.set_title('SVAJ Diagram')
+
     plt.show()
 
 if __name__ == '__main__':
@@ -162,4 +173,7 @@ if __name__ == '__main__':
     ideal_cam_lift = load('cam.tbl', 'cam_lift')[:,1]
 
     # plot_FFT(cam_angle, ideal_cam_lift)
-    plot_SVA(cam_angle, smooth_lift(ideal_cam_lift + cam_base_radius, 3), None)
+    plot_SVAJ(
+        cam_angle,
+        smooth_lift(ideal_cam_lift + cam_base_radius, 400),
+        None)
