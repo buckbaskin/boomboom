@@ -54,7 +54,8 @@ class IntakeValveRecorderModel(AbstractModel):
         last_lift = self.cam_profile['cam_lift'][-1]
         next_lift = 2 * simulated_avg_lift - last_lift
 
-        print('---\nposition limited lift:\n%s' % (next_lift,))
+        # Acceleration limits
+        use_acceleration_limits = False
 
         if len(self.cam_profile['cam_lift']) >= 2:
             early_lift = self.cam_profile['cam_lift'][-2]
@@ -63,26 +64,16 @@ class IntakeValveRecorderModel(AbstractModel):
         incoming_cam_vel = (last_lift - early_lift) / time_step
         next_cam_vel = (next_lift - last_lift) / time_step
         accel = (next_cam_vel - incoming_cam_vel) / time_step
-
-        print('accel, pre limits\n%s' % accel)
-
         # positive acceleration (force/pressure angle) limits
-
         accel = np.minimum(accel, np.ones(accel.shape) * max_valve_accel)    
-        
-        print('accel, mid limits\n%s' % accel)
-
         # negative acceleration (spring/force/pressure angle) limits
-
         accel = np.maximum(accel, np.ones(accel.shape) * min_valve_accel)
         
-        print('accel, post limits\n%s' % accel)
-
-        # rewrite cam velocity and new positions
-        next_cam_vel = (accel * time_step) + incoming_cam_vel
-        # next_lift = (next_cam_vel * time_step) + last_lift
-        print('new lift:\n%s' % (next_lift,))
-
+        if use_acceleration_limits:
+            # rewrite cam velocity and new positions
+            next_cam_vel = (accel * time_step) + incoming_cam_vel
+            next_lift = (next_cam_vel * time_step) + last_lift
+        
         # Valve limits based on maximum/minimum position limits
         next_lift = np.maximum(next_lift, np.ones(next_lift.shape) * min_valve_lift)
         next_lift = np.minimum(next_lift, np.ones(next_lift.shape) * max_valve_lift)
