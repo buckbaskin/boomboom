@@ -9,6 +9,12 @@ import matplotlib
 matplotlib.use('Qt5Agg')
 import matplotlib.pyplot as plt
 
+print('done loading pyplot')
+print('loading pytables')
+
+import tables
+
+
 class IntakeValveRecorderModel(AbstractModel):
     def __init__(self, cam_orientation):
         self.cam_orientation = np.array(cam_orientation)
@@ -94,3 +100,10 @@ class IntakeValveRecorderModel(AbstractModel):
         plt.plot(angle, lift)
         print('Plot Intake Cam Lift')
         plt.show()
+
+    def save(self):
+        angle = np.array(self.cam_profile['cam_position'])
+        lift = np.array(self.cam_profile['cam_lift'])
+        with tables.open_file('cam.tbl', 'w') as h5_file:
+            h5_file.create_array('/', 'cam_angle', angle)
+            h5_file.create_array('/', 'cam_lift', lift)

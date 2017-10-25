@@ -64,3 +64,4 @@ if __name__ == '__main__':
     e._sensor.summary()
     # e._sensor.plot()
     e._intake.plot()
+    e._intake.save()
