@@ -70,7 +70,18 @@ class KinematicCylinderModel(AbstractCylinderModel):
         dist_swept = self.lin_v * time_step
         vol_swept = (bore/2)**2 * pi * dist_swept
 
-        return (self.allocate_intakev(vol_swept), self.allocate_exhaustv(vol_swept),)
+        print(cycle_intake, cycle_exhaust)
+
+        for index, oriented in enumerate(np.mod(new_orientation, (4*pi))):
+            if not (cycle_intake[0] < oriented < cycle_intake[1]):
+                print('new orient %s' % (new_orientation,))
+                print('old val swept %s' % vol_swept)
+                vol_swept[index] = min(0.0, vol_swept[index])
+                print('new vol swept %s' % vol_swept)
+            if not (cycle_exhaust[0] < oriented < cycle_exhaust[1]):
+                vol_swept[index] = max(0.0, vol_swept[index])
+
+        return (self.allocate_intakev(vol_swept), self.allocate_exhaustv(vol_swept))
 
     def __allocate_intake(self, vol_swept):
         return max(0.0, vol_swept)

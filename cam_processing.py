@@ -167,6 +167,10 @@ def plot_SVAJ(angle, lift, projection='polar'):
 
     plt.show()
 
+def fit_dwell_curve(angle, lift):
+    # TODO(buckbaskin):
+    return lift
+
 if __name__ == '__main__':
     # note: working on this for one cam lobe at a time
     cam_angle = load('cam.tbl', 'cam_angle')[:,1]

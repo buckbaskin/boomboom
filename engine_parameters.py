@@ -1,5 +1,6 @@
 from math import pi
 
+import numpy as np
 from numpy import sin, cos
 
 ### Cylinder ###
@@ -38,6 +39,11 @@ compression_ratio = 12.5
 combustion_chamber_volume = disp_per_cylinder / (compression_ratio - 1)
 
 combustion_chamber_height = combustion_chamber_volume / (pi * (bore / 2)**2)
+
+cycle_intake = np.array([0, 180]) * (pi / 180)
+cycle_compression = np.array([180, 360]) * (pi / 180)
+cycle_expansion = np.array([360, 540]) * (pi / 180)
+cycle_exhaust = np.array([540, 720]) * (pi / 180)
 
 ### Valves ###
 
