@@ -1,17 +1,17 @@
 import numpy as np
 
+from engine_parameters import *
+
 print('load pyplot')
 
 import matplotlib
 matplotlib.use('Qt5Agg')
 import matplotlib.pyplot as plt
 
-
-
 class AbstractSensor(object):
     pass
 
-class SVASensor(object):
+class SVASensor(AbstractSensor):
     def __init__(self, visual=False):
         self.visual = visual
         self._engine = None
@@ -24,11 +24,17 @@ class SVASensor(object):
         self.angle = [0.0]
         self.time = [0.0]
 
+        self.mean_piston_speed = 0.0
+        self.max_piston_speed = 0.0
+        self.rpm = [0.0]
+
     def register(self, engine):
         self._engine = engine
 
     def step(self, crank_step, time_step):
         rad_per_sec = crank_step / time_step
+        rpm = rad_per_sec * 60 / (2 * pi)
+        self.rpm.append(rpm)
 
         self.angle.append(self.angle[-1] + crank_step)
         self.time.append(self.time[-1] + time_step)
@@ -37,6 +43,11 @@ class SVASensor(object):
         self.Si.append(self._engine._cylinder.lin_position(self.angle[-1]))
         self.V.append(self._engine._cylinder.lin_v[0])
         self.Vi.append(self._engine._cylinder.lin_velocity(self.angle[-1], rad_per_sec))
+
+        np_vel = np.array(self.Vi[1:])
+        self.mean_piston_speed = np.mean(np.abs(np_vel))
+        self.max_piston_speed = np.amax(np_vel)
+
         self.A.append(self._engine._cylinder.lin_a[0])
         self.Ai.append(self._engine._cylinder.lin_accel(self.angle[-1], rad_per_sec))
 
@@ -60,3 +71,9 @@ class SVASensor(object):
         if ('A' in values):
             plt.plot(angle, A)
         plt.show()
+
+    def summary(self):
+        avg_rpm = np.mean(np.array(self.rpm[1:]))
+        print('Avg RPM           %5d' % (avg_rpm,))
+        print('Mean Piston Speed %2.2f m/s' % (self.mean_piston_speed / 100,))
+        print('Max Piston Speed  %2.2f m/s' % (self.max_piston_speed / 100,))

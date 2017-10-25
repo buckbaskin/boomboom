@@ -31,7 +31,7 @@ if __name__ == '__main__':
     total_rad = total_revs * 2 * pi
     num_steps = 1000
 
-    rpm = 1000
+    rpm = 5000
     rad_per_sec = rpm / 60 * 2 * pi
 
     step_angle = total_rad / num_steps
@@ -51,4 +51,5 @@ if __name__ == '__main__':
     for i in range(0, num_steps):
         e.step(step_angle, step_time)
 
+    e._sensor.summary()
     e._sensor.plot()

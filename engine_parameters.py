@@ -7,7 +7,7 @@ from numpy import sin, cos
 # Params from a Huyabusa
 
 total_displacement = 1340 # cc
-num_cylinders = 4
+num_cylinders = 2
 disp_per_cylinder = total_displacement / num_cylinders # cubic centimeters
 
 piston_orientation = [0, 0, 0, 0]
