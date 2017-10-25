@@ -58,6 +58,17 @@ class IntakeValveRecorderModel(AbstractModel):
         next_lift = np.maximum(next_lift, np.ones(next_lift.shape) * min_valve_lift)
         next_lift = np.minimum(next_lift, np.ones(next_lift.shape) * max_valve_lift)
 
+        if len(self.cam_profile['cam_lift']) >= 2:
+            early_lift = self.cam_profile['cam_lift'][-2]
+        else:
+            early_lift = 0.0
+
+        # TODO(buckbaskin): positive acceleration (force/pressure angle) limits
+
+        # TODO(buckbaskin): negative acceleration (spring/force/pressure angle) limits
+
+        # TODO(buckbaskin): limit maximum required torque from lift pressure angle
+
         print('last %.2f > sim %.2f > next %.2f' % (last_lift[1], simulated_avg_lift[1], next_lift[1],))
 
         self.cam_orientation = new_orientation

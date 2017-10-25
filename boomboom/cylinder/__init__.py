@@ -40,6 +40,17 @@ class KinematicCylinderModel(AbstractCylinderModel):
         pass
 
     def request_airflow(self, crank_step, time_step):
+        # TODO(buckbaskin): incorporate 4-stroke timing here
+        # I could do:
+        #  - given a cam timing, intake starts at the beginning of the rise on
+        #    the intake cam (overlaps exhaust)
+        #  - compression is the close of the intake cam to spark
+        #  - burn is the spark until exhaust valve opens (overlaps exhaust)
+        #  - exhaust is the exhaust value until it closes (overlaps intake)
+        # But I don't have a cam yet. So, define each cycle and when it starts/
+        #   stops. Then only send to intake/exhaust requests when in those cycles
+        #   Track pressures and things.
+
         # Ideal filling and cylinder rotation
         rad_per_sec = crank_step / time_step
         old_orientation = self.piston_orientation
