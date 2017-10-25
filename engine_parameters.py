@@ -41,9 +41,13 @@ combustion_chamber_height = combustion_chamber_volume / (pi * (bore / 2)**2)
 
 ### Valves ###
 
-cam_inner_diameter = 2.54 # cm
-max_valve_lift = 2.54 / 2 # cm
+cam_base_diameter = 2.54 # cm
+max_valve_lift = 2.0 # cm
 min_valve_lift = 0.0 # cm
+max_valve_vel = None
+min_valve_vel = None
+max_valve_accel =  99000 # cm / sec**2
+min_valve_accel = -90001 # cm / sec**2
 
 intake_valve_diameter = 2.54 # cm
 num_intake_valves = 2

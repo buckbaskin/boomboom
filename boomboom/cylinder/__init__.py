@@ -57,27 +57,18 @@ class KinematicCylinderModel(AbstractCylinderModel):
         new_orientation = self.piston_orientation + crank_step
 
         avg_vel = (self.lin_position(new_orientation) - self.lin_position(old_orientation)) / time_step
-        # print('---\navg_vel %s' % avg_vel)
         lv1 = self.lin_velocity(new_orientation, rad_per_sec)
         lv2 = self.lin_velocity(old_orientation, rad_per_sec)
-        # print('lin_vel 1 %s' % lv1)
-        # print('lin_vel 2 %s' % lv2)
-        # print('time step %s' % time_step)
         avg_accel = (lv1 - lv2) / time_step
-        # print('avg_accel %s' % avg_accel)
         i_accel = self.lin_accel(new_orientation, rad_per_sec)
 
         self.lin_s = (self.lin_position(new_orientation) + self.lin_position(old_orientation)) / 2
         self.lin_v = avg_vel
         self.lin_a = avg_accel
-        # print(self.lin_a)
         self.piston_orientation = new_orientation
 
         dist_swept = self.lin_v * time_step
         vol_swept = (bore/2)**2 * pi * dist_swept
-
-        if (vol_swept > 0).all():
-            print('---\nI swept/I want %s' % (vol_swept,))
 
         return (self.allocate_intakev(vol_swept), self.allocate_exhaustv(vol_swept),)
 

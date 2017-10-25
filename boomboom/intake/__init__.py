@@ -36,8 +36,6 @@ class IntakeValveRecorderModel(AbstractModel):
 
         trap_max_mass = (max_airflow_mass + last_af_mass) / 2
 
-        print('requested kg %s vs max_mass %s' % (requested_kg, trap_max_mass,))
-
         return np.minimum(requested_kg, trap_max_mass)
 
     def step(self, crank_step, time_step, airflow_mass):
@@ -55,21 +53,41 @@ class IntakeValveRecorderModel(AbstractModel):
 
         last_lift = self.cam_profile['cam_lift'][-1]
         next_lift = 2 * simulated_avg_lift - last_lift
-        next_lift = np.maximum(next_lift, np.ones(next_lift.shape) * min_valve_lift)
-        next_lift = np.minimum(next_lift, np.ones(next_lift.shape) * max_valve_lift)
+
+        print('---\nposition limited lift:\n%s' % (next_lift,))
 
         if len(self.cam_profile['cam_lift']) >= 2:
             early_lift = self.cam_profile['cam_lift'][-2]
         else:
             early_lift = 0.0
+        incoming_cam_vel = (last_lift - early_lift) / time_step
+        next_cam_vel = (next_lift - last_lift) / time_step
+        accel = (next_cam_vel - incoming_cam_vel) / time_step
 
-        # TODO(buckbaskin): positive acceleration (force/pressure angle) limits
+        print('accel, pre limits\n%s' % accel)
 
-        # TODO(buckbaskin): negative acceleration (spring/force/pressure angle) limits
+        # positive acceleration (force/pressure angle) limits
 
+        accel = np.minimum(accel, np.ones(accel.shape) * max_valve_accel)    
+        
+        print('accel, mid limits\n%s' % accel)
+
+        # negative acceleration (spring/force/pressure angle) limits
+
+        accel = np.maximum(accel, np.ones(accel.shape) * min_valve_accel)
+        
+        print('accel, post limits\n%s' % accel)
+
+        # rewrite cam velocity and new positions
+        next_cam_vel = (accel * time_step) + incoming_cam_vel
+        # next_lift = (next_cam_vel * time_step) + last_lift
+        print('new lift:\n%s' % (next_lift,))
+
+        # Valve limits based on maximum/minimum position limits
+        next_lift = np.maximum(next_lift, np.ones(next_lift.shape) * min_valve_lift)
+        next_lift = np.minimum(next_lift, np.ones(next_lift.shape) * max_valve_lift)
+        
         # TODO(buckbaskin): limit maximum required torque from lift pressure angle
-
-        print('last %.2f > sim %.2f > next %.2f' % (last_lift[1], simulated_avg_lift[1], next_lift[1],))
 
         self.cam_orientation = new_orientation
         self.cam_profile['cam_position'].append(new_orientation)
@@ -78,8 +96,7 @@ class IntakeValveRecorderModel(AbstractModel):
     def plot(self):
         angle = np.array(self.cam_profile['cam_position'][1:])[:,1]
         lift = np.array(self.cam_profile['cam_lift'][1:])[:,1]
-        print(angle)
-
+        
         plt.xlabel('Camshaft angle, first piston (radians)')
         plt.ylabel('Camshaft lift (cm)')
         # plt.plot(lift)
