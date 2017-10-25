@@ -2,6 +2,8 @@ import numpy as np
 import scipy.signal as signal
 import tables
 
+from engine_parameters import *
+
 print('load pyplot')
 
 import matplotlib
@@ -27,8 +29,8 @@ def load(file_, name):
         data = getattr(h5_file.root, name).read()
         return data
 
-def smooth_lift(ideal_cam_lift):
-    win = signal.hann(50)
+def smooth_lift(ideal_cam_lift, limit=100):
+    win = signal.hann(100)
     filtered = signal.convolve(
             ideal_cam_lift,
             win,
@@ -36,45 +38,122 @@ def smooth_lift(ideal_cam_lift):
         ) / np.sum(win)
     return filtered
 
-def fft_lift(ideal_cam_lift):
-    return ideal_cam_lift
+def fft_lift(ideal_cam_lift, limit=200):
+    fft_ = np.fft.fft(ideal_cam_lift)
+    fft_[int(limit):] = 0.0
+    return np.fft.ifft(fft_)
 
-def plot_S(angle, lift):
-    plt.xlabel('Camshaft angle, first piston (radians)')
-    plt.ylabel('Camshaft lift (cm)')
-    
-    plt.plot(angle, lift)
-    plt.plot(cam_angle, fft_lift(lift))
-    plt.plot(angle, smooth_lift(lift))
-    
+def plot_S(angle, lift, projection='polar'):
+    ax = plt.subplot(111, projection=projection)
+    ax.set_theta_zero_location("N")
+    ax.set_theta_direction(-1)
+    ax.plot(angle, lift + cam_base_radius, 'r')
+    ax.plot(angle, fft_lift(lift, 200) + cam_base_radius, 'g')
+    ax.plot(angle, smooth_lift(lift, 100) + cam_base_radius, 'b')
+
+    ax.set_rmax(max_valve_lift + cam_base_radius)
+    ax.set_rmin(0.0)
+
+    ax.set_rticks([0.5 * max_valve_lift, max_valve_lift])  # less radial ticks
+    ax.set_rlabel_position(-22.5)  # get radial labels away from plotted line
+    ax.grid(True)
+
     plt.show()
 
-def numerical_vel(lift):
-    # TODO(buckbaskin)
-    return lift
+def plot_FFT(angle, lift, projection='polar'):
+    ax = plt.subplot(111, projection=projection)
+    ax.set_theta_zero_location("N")
+    ax.set_theta_direction(-1)
+    ax.plot(angle, lift + cam_base_radius, 'r')
 
-def plot_V(angle, lift):
-    plt.xlabel('Camshaft angle, first piston (radians)')
-    plt.ylabel('Camshaft vel (cm / sec)')
-    
-    plt.plot(angle, numerical_vel(lift))
-    plt.plot(cam_angle, numerical_vel(fft_lift(lift)))
-    plt.plot(angle, numerical_vel(smooth_lift(lift)))
-    
+    offset = 1
+
+    ax.plot(angle, fft_lift(lift, 16+offset) + cam_base_radius, 'g')
+    ax.plot(angle, fft_lift(lift, 8+offset) + cam_base_radius, 'b')
+    ax.plot(angle, fft_lift(lift, 4+offset) + cam_base_radius, 'xkcd:sky blue')
+    ax.plot(angle, fft_lift(lift, 2+offset) + cam_base_radius, 'xkcd:beige')
+
+    ax.set_rmax(max_valve_lift + cam_base_radius)
+    ax.set_rmin(0.0)
+
+    ax.set_rticks([0.5 * max_valve_lift, max_valve_lift])  # less radial ticks
+    ax.set_rlabel_position(-22.5)  # get radial labels away from plotted line
+    ax.grid(True)
+
     plt.show()
 
-def numerical_accel(lift):
-    # TODO(buckbaskin)
-    return lift
+def numerical_vel(angle, lift):
+    x = angle
+    y = lift
+    dy = np.zeros(y.shape,np.float)
+    dy[0:-1] = np.diff(y)/np.diff(x)
+    dy[-1] = (y[-1] - y[-2])/(x[-1] - x[-2])
+    return dy
 
-def plot_A(angle, lift):
-    plt.xlabel('Camshaft angle, first piston (radians)')
-    plt.ylabel('Camshaft accel (cm / sec**2)')
+def plot_V(angle, lift, projection='polar'):
+    ax = plt.subplot(111, projection=projection)
+    ax.set_theta_zero_location("N")
+    ax.set_theta_direction(-1)
+    ax.plot(angle, numerical_vel(angle, lift), 'r')
+    ax.plot(angle, numerical_vel(fft_lift(lift)), 'g')
+    ax.plot(angle, numerical_vel(smooth_lift(lift)), 'b')
+
+    # ax.set_rmax(max_valve_lift)
+    ax.set_rmin(min_valve_lift)
+
+    ax.set_rticks([0.5 * max_valve_lift, max_valve_lift])  # less radial ticks
+    ax.set_rlabel_position(-22.5)  # get radial labels away from plotted line
+    ax.grid(True)
+
+    plt.show()
+
+def numerical_accel(angle, lift):
+    x = angle
+    y = lift
     
-    plt.plot(angle, numerical_accel(lift))
-    plt.plot(cam_angle, numerical_accel(fft_lift(lift)))
-    plt.plot(angle, numerical_accel(smooth_lift(lift)))
+    dy = np.zeros(y.shape,np.float)
+    dy[0:-1] = np.diff(y)/np.diff(x)
+    dy[-1] = (y[-1] - y[-2])/(x[-1] - x[-2])
+
+    ddy = np.zeros(y.shape,np.float)
+    ddy[0:-1] = np.diff(dy)/np.diff(x)
+    ddy[-1] = (dy[-1] - dy[-2])/(x[-1] - x[-2])
+
+    return ddy
+
+def plot_A(angle, lift, projection='polar'):
+    ax = plt.subplot(111, projection=projection)
+    ax.set_theta_zero_location("N")
+    ax.set_theta_direction(-1)
+    ax.plot(angle, numerical_accel(angle, lift), 'r')
+    ax.plot(angle, numerical_accel(fft_lift(lift)), 'g')
+    ax.plot(angle, numerical_accel(smooth_lift(lift)), 'b')
+
+    # ax.set_rmax(max_valve_lift)
+    ax.set_rmin(0.0)
+
+    ax.set_rticks([0.5 * max_valve_lift, max_valve_lift])  # less radial ticks
+    ax.set_rlabel_position(-22.5)  # get radial labels away from plotted line
+    ax.grid(True)
+
+    plt.show()
+
+def plot_SVA(angle, lift, projection='polar'):
+    ax = plt.subplot(111, projection=projection)
+    ax.plot(angle, lift, 'r')
+    ax.plot(angle, numerical_vel(angle, lift), 'g')
+    ax.plot(angle, numerical_accel(angle, lift), 'b')
     
+    if projection == 'polar':
+        ax.set_theta_zero_location("N")
+        ax.set_theta_direction(-1)
+    
+        ax.set_rmin(min_valve_lift)
+
+        ax.set_rticks([0.5 * max_valve_lift, max_valve_lift])  # less radial ticks
+        ax.set_rlabel_position(-22.5)  # get radial labels away from plotted line
+        ax.grid(True)
+
     plt.show()
 
 if __name__ == '__main__':
@@ -82,4 +161,5 @@ if __name__ == '__main__':
     cam_angle = load('cam.tbl', 'cam_angle')[:,1]
     ideal_cam_lift = load('cam.tbl', 'cam_lift')[:,1]
 
-    
+    # plot_FFT(cam_angle, ideal_cam_lift)
+    plot_SVA(cam_angle, smooth_lift(ideal_cam_lift + cam_base_radius, 3), None)
