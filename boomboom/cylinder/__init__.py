@@ -17,6 +17,8 @@ class KinematicCylinderModel(AbstractCylinderModel):
         self.lin_a = 0.0
 
         # crank orientation in radians, with 0.0 = TDC for front piston
+        self.allocate_intakev = np.vectorize(self.__allocate_intake, otypes=[np.float])
+        self.allocate_exhaustv = np.vectorize(self.__allocate_exhaust, otypes=[np.float])
 
     def lin_position(self, crank_orientation):
         val = (crank_radius * (1 - cos(crank_orientation)) + 
@@ -34,7 +36,11 @@ class KinematicCylinderModel(AbstractCylinderModel):
         k = crank_ratio * cos(2 * crank_orientation)
         return i * (j + k)
 
-    def step(self, crank_step, time_step):
+    def step(self, crank_step, time_step, intake_airflow, exhaust_airflow):
+        pass
+
+    def request_airflow(self, crank_step, time_step):
+        # Ideal filling and cylinder rotation
         rad_per_sec = crank_step / time_step
         old_orientation = self.piston_orientation
         new_orientation = self.piston_orientation + crank_step
@@ -55,5 +61,19 @@ class KinematicCylinderModel(AbstractCylinderModel):
         self.lin_a = avg_accel
         # print(self.lin_a)
         self.piston_orientation = new_orientation
+
+        dist_swept = self.lin_v * time_step
+        vol_swept = (bore/2)**2 * pi * dist_swept
+
+        if (vol_swept > 0).all():
+            print('---\nI swept/I want %s' % (vol_swept,))
+
+        return (self.allocate_intakev(vol_swept), self.allocate_exhaustv(vol_swept),)
+
+    def __allocate_intake(self, vol_swept):
+        return max(0.0, vol_swept)
+
+    def __allocate_exhaust(self, vol_swept):
+        return -min(0.0, vol_swept)
 
 

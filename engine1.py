@@ -21,11 +21,21 @@ class Engine(AbstractModel):
         self._sensor.register(self)
 
     def step(self, crank_degree, time_step):
-        self._cylinder.step(crank_degree, time_step)
+        req_intake_kg, req_exhaust_kg = self._cylinder.request_airflow(crank_degree, time_step)
+        act_intake_kg = self._intake.request_airflow(req_intake_kg, time_step)
+        # act_exhuast_kg = self._exhuast.request_airflow(req_exhuast_kg, time_step)
+        act_exhuast_kg = 0.0
+        self._cylinder.step(crank_degree, time_step, act_intake_kg, act_exhuast_kg)
+        self._intake.step(crank_degree, time_step, act_intake_kg)
         self._sensor.step(crank_degree, time_step)
 
 if __name__ == '__main__':
-    e = Engine(None, KinematicCylinderModel(piston_orientation), None, SVASensor())
+    e = Engine(
+            IntakeValveRecorderModel(cam_orientation),
+            KinematicCylinderModel(piston_orientation),
+            None,
+            SVASensor()
+        )
 
     total_revs = 2
     total_rad = total_revs * 2 * pi
@@ -52,4 +62,5 @@ if __name__ == '__main__':
         e.step(step_angle, step_time)
 
     e._sensor.summary()
-    e._sensor.plot()
+    # e._sensor.plot()
+    e._intake.plot()
