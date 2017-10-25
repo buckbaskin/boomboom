@@ -142,6 +142,35 @@ def numerical_jerk(angle, lift):
 
     return dy
 
+def plot_SVA(angle, lift, projection='polar'):
+    ax = plt.subplot(111, projection=projection)
+    ax.plot(angle, lift, 'r')
+    ax.plot(angle, numerical_vel(angle, lift), 'g')
+    ax.plot(angle, numerical_accel(angle, lift), 'b')
+    # ax.plot(angle, numerical_jerk(angle, lift), 'xkcd:sky blue')
+    
+    if projection == 'polar':
+        ax.set_theta_zero_location("N")
+        ax.set_theta_direction(-1)
+    
+        ax.set_rmax(cam_base_radius + max_valve_lift * 2)
+        ax.set_rmin(min_valve_lift)
+
+        ax.set_rticks([
+            cam_base_radius,
+            0.5 * max_valve_lift + cam_base_radius,
+            max_valve_lift + cam_base_radius])  # less radial ticks
+        ax.set_rlabel_position(-22.5)  # get radial labels away from plotted line
+        ax.grid(True)
+
+    else:
+        ax.set_xlabel('Cam rotation (radians)')
+        ax.set_ylim([-20, 20])
+        ax.set_ylabel('SVA (cm, cm/sec, cm/sec**2)')
+    ax.set_title('SVA Diagram')
+
+    plt.show()
+
 def plot_SVAJ(angle, lift, projection='polar'):
     ax = plt.subplot(111, projection=projection)
     ax.plot(angle, lift, 'r')
@@ -153,6 +182,7 @@ def plot_SVAJ(angle, lift, projection='polar'):
         ax.set_theta_zero_location("N")
         ax.set_theta_direction(-1)
     
+        ax.set_rmax(max_valve_lift * 1.2)
         ax.set_rmin(min_valve_lift)
 
         ax.set_rticks([0.5 * max_valve_lift, max_valve_lift])  # less radial ticks
@@ -163,7 +193,7 @@ def plot_SVAJ(angle, lift, projection='polar'):
         ax.set_xlabel('Cam rotation (radians)')
         ax.set_ylim([-20, 20])
         ax.set_ylabel('SVAJ (cm, cm/sec, cm/sec**2, cm/sec**3)')
-        ax.set_title('SVAJ Diagram')
+    ax.set_title('SVAJ Diagram')
 
     plt.show()
 
@@ -177,7 +207,7 @@ if __name__ == '__main__':
     ideal_cam_lift = load('cam.tbl', 'cam_lift')[:,1]
 
     # plot_FFT(cam_angle, ideal_cam_lift)
-    plot_SVAJ(
+    plot_SVA(
         cam_angle,
         smooth_lift(ideal_cam_lift + cam_base_radius, 400),
         None)
