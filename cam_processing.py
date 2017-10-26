@@ -207,9 +207,9 @@ def fit_dwell_curve(angle, lift):
     # dwell at bottom
 
     def rise(local_angle, total_angle, max_valve_lift):
-        frequency_shift = 1 * pi / total_angle
-
-        return max_valve_lift / 2.0 * (1 - cos(frequency_shift * local_angle))
+        nondim_angle = local_angle / total_angle
+        x = nondim_angle
+        return max_valve_lift * (10*x**3 - 15*x**4 + 6*x**5)
 
     def __rdfd(angle, cam_offset, high_dwell_time, fall_time, low_dwell_time):
         '''
@@ -231,26 +231,23 @@ def fit_dwell_curve(angle, lift):
             angle -= 2 * pi
 
         if angle < high_dwell_time:
-            # TODO rise curve
             return cam_base_radius + max_valve_lift
 
         elif angle < high_dwell_time + fall_time:
-            # top dwell
-            return cam_base_radius + max_valve_lift * 0.45
+            local_angle = angle - (high_dwell_time)
+            return cam_base_radius + max_valve_lift - rise(local_angle, fall_time, max_valve_lift)
 
         elif angle < high_dwell_time + fall_time + low_dwell_time:
-            # TODO fall curve
             return cam_base_radius + 0.0
 
         else:
-            # low dwell
             local_angle = angle - (high_dwell_time + fall_time + low_dwell_time)
             return cam_base_radius + rise(local_angle, rise_time, max_valve_lift)
 
     _rdfd = np.vectorize(__rdfd)
 
-    def rdfd(angle, cam_offset, rise_time, high_dwell_time, fall_time):
-        return _rdfd(angle, cam_offset, rise_time, high_dwell_time, fall_time)
+    def rdfd(angle, cam_offset, high_dwell_time, fall_time, low_dwell_time):
+        return _rdfd(angle, cam_offset, high_dwell_time, fall_time, low_dwell_time)
 
     # avoid higher order discontinuity
     # minimize difference between ideal and calculated curve
@@ -259,7 +256,7 @@ def fit_dwell_curve(angle, lift):
     # xdata
     xdata = angle
     ydata = lift
-    bounds = (0, [pi/2, pi, pi, pi])
+    bounds = ([0, 0, pi/8, 0], [pi/2, pi, pi, pi])
 
     initial_guess = [0, pi/2, pi/2, pi/2]
 
@@ -267,10 +264,10 @@ def fit_dwell_curve(angle, lift):
 
     print('Optimized variables to:')
     print('Cam Advance: %.2f' % (popt[0] / pi * 180))
-    print('Rise Time:   %.2f' % (popt[1] / pi * 180))
-    print('TDwell Time: %.2f' % (popt[2] / pi * 180))
-    print('Fall Time:   %.2f' % (popt[3] / pi * 180))
-    print('BDwell Time: %.2f' % (360 - ((sum(popt) - popt[0]) / pi * 180)))
+    print('TDwell Time: %.2f' % (popt[1] / pi * 180))
+    print('Fall Time:   %.2f' % (popt[2] / pi * 180))
+    print('BDwell Time: %.2f' % (popt[3] / pi * 180))
+    print('Rise Time:   %.2f' % (360 - ((sum(popt) - popt[0]) / pi * 180)))
 
     lift = _rdfd(xdata, *popt)
 
