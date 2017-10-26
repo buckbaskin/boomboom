@@ -206,14 +206,19 @@ def fit_dwell_curve(angle, lift):
     # fall
     # dwell at bottom
 
-    def __rdfd(angle, cam_offset, rise_time, high_dwell_time, fall_time):
+    def rise(local_angle, total_angle, max_valve_lift):
+        frequency_shift = 1 * pi / total_angle
+
+        return max_valve_lift / 2.0 * (1 - cos(frequency_shift * local_angle))
+
+    def __rdfd(angle, cam_offset, high_dwell_time, fall_time, low_dwell_time):
         '''
         rdfd(x, a, b, c, d)
         x is independent variable
         a -> d are parameters of the function
         '''
 
-        low_dwell_time = 2 * pi - (rise_time + high_dwell_time + fall_time)
+        rise_time = 2 * pi - (low_dwell_time + high_dwell_time + fall_time)
         # instead of starting at TDC the intake at the start at 0 - cam_offset
         # then rise from there for rise_time radians
         # then dwell for for high_dwell_time radians
@@ -225,21 +230,22 @@ def fit_dwell_curve(angle, lift):
         elif angle > 2 * pi:
             angle -= 2 * pi
 
-        if angle < rise_time:
+        if angle < high_dwell_time:
             # TODO rise curve
-            return cam_base_radius + max_valve_lift * 0.55
-
-        elif angle < rise_time + high_dwell_time:
-            # top dwell
             return cam_base_radius + max_valve_lift
 
-        elif angle < rise_time + high_dwell_time + fall_time:
-            # TODO fall curve
+        elif angle < high_dwell_time + fall_time:
+            # top dwell
             return cam_base_radius + max_valve_lift * 0.45
+
+        elif angle < high_dwell_time + fall_time + low_dwell_time:
+            # TODO fall curve
+            return cam_base_radius + 0.0
 
         else:
             # low dwell
-            return cam_base_radius + 0.0
+            local_angle = angle - (high_dwell_time + fall_time + low_dwell_time)
+            return cam_base_radius + rise(local_angle, rise_time, max_valve_lift)
 
     _rdfd = np.vectorize(__rdfd)
 
@@ -255,7 +261,9 @@ def fit_dwell_curve(angle, lift):
     ydata = lift
     bounds = (0, [pi/2, pi, pi, pi])
 
-    popt, pcov = optimize.curve_fit(rdfd, xdata, ydata, bounds=bounds)
+    initial_guess = [0, pi/2, pi/2, pi/2]
+
+    popt, pcov = optimize.curve_fit(rdfd, xdata, ydata, p0=initial_guess, bounds=bounds)
 
     print('Optimized variables to:')
     print('Cam Advance: %.2f' % (popt[0] / pi * 180))
