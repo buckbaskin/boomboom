@@ -1,5 +1,5 @@
 import numpy as np
-import scipy.signal as signal
+from scipy import signal, optimize
 import tables
 
 from engine_parameters import *
@@ -43,20 +43,22 @@ def fft_lift(ideal_cam_lift, limit=200):
     fft_[int(limit):] = 0.0
     return np.fft.ifft(fft_)
 
-def plot_S(angle, lift, projection='polar'):
+def plot_S(angle, lift, projection=None):
     ax = plt.subplot(111, projection=projection)
-    ax.set_theta_zero_location("N")
-    ax.set_theta_direction(-1)
     ax.plot(angle, lift + cam_base_radius, 'r')
-    ax.plot(angle, fft_lift(lift, 200) + cam_base_radius, 'g')
-    ax.plot(angle, smooth_lift(lift, 100) + cam_base_radius, 'b')
+    ax.plot(angle, fit_dwell_curve(cam_angle, ideal_cam_lift + cam_base_radius), 'g')
+    # ax.plot(angle, fft_lift(lift, 200) + cam_base_radius, 'g')
+    # ax.plot(angle, smooth_lift(lift, 100) + cam_base_radius, 'b')
+    if projection == 'polar':
+        ax.set_theta_zero_location("N")
+        ax.set_theta_direction(-1)
+   
+        ax.set_rmax(max_valve_lift + cam_base_radius)
+        ax.set_rmin(0.0)
 
-    ax.set_rmax(max_valve_lift + cam_base_radius)
-    ax.set_rmin(0.0)
-
-    ax.set_rticks([0.5 * max_valve_lift, max_valve_lift])  # less radial ticks
-    ax.set_rlabel_position(-22.5)  # get radial labels away from plotted line
-    ax.grid(True)
+        ax.set_rticks([0.5 * max_valve_lift, max_valve_lift])  # less radial ticks
+        ax.set_rlabel_position(-22.5)  # get radial labels away from plotted line
+        ax.grid(True)
 
     plt.show()
 
@@ -198,7 +200,72 @@ def plot_SVAJ(angle, lift, projection='polar'):
     plt.show()
 
 def fit_dwell_curve(angle, lift):
-    # TODO(buckbaskin):
+    # start at 0
+    # rise
+    # dwell at top
+    # fall
+    # dwell at bottom
+
+    def __rdfd(angle, cam_offset, rise_time, high_dwell_time, fall_time):
+        '''
+        rdfd(x, a, b, c, d)
+        x is independent variable
+        a -> d are parameters of the function
+        '''
+
+        low_dwell_time = 2 * pi - (rise_time + high_dwell_time + fall_time)
+        # instead of starting at TDC the intake at the start at 0 - cam_offset
+        # then rise from there for rise_time radians
+        # then dwell for for high_dwell_time radians
+        # then fall from there for fall_time radians
+        # then complete the circle for low_dwell_time radians 
+        angle = angle + cam_offset
+        if angle < 0:
+            angle += 2 * pi
+        elif angle > 2 * pi:
+            angle -= 2 * pi
+
+        if angle < rise_time:
+            # TODO rise curve
+            return cam_base_radius + max_valve_lift * 0.55
+
+        elif angle < rise_time + high_dwell_time:
+            # top dwell
+            return cam_base_radius + max_valve_lift
+
+        elif angle < rise_time + high_dwell_time + fall_time:
+            # TODO fall curve
+            return cam_base_radius + max_valve_lift * 0.45
+
+        else:
+            # low dwell
+            return cam_base_radius + 0.0
+
+    _rdfd = np.vectorize(__rdfd)
+
+    def rdfd(angle, cam_offset, rise_time, high_dwell_time, fall_time):
+        return _rdfd(angle, cam_offset, rise_time, high_dwell_time, fall_time)
+
+    # avoid higher order discontinuity
+    # minimize difference between ideal and calculated curve
+    # maximize area under the curve
+
+    # xdata
+    xdata = angle
+    ydata = lift
+    bounds = (0, [pi/2, pi, pi, pi])
+
+    popt, pcov = optimize.curve_fit(rdfd, xdata, ydata, bounds=bounds)
+
+    print('Optimized variables to:')
+    print('Cam Advance: %.2f' % (popt[0] / pi * 180))
+    print('Rise Time:   %.2f' % (popt[1] / pi * 180))
+    print('TDwell Time: %.2f' % (popt[2] / pi * 180))
+    print('Fall Time:   %.2f' % (popt[3] / pi * 180))
+    print('BDwell Time: %.2f' % (360 - ((sum(popt) - popt[0]) / pi * 180)))
+
+    lift = _rdfd(xdata, *popt)
+
     return lift
 
 if __name__ == '__main__':
@@ -207,7 +274,7 @@ if __name__ == '__main__':
     ideal_cam_lift = load('cam.tbl', 'cam_lift')[:,1]
 
     # plot_FFT(cam_angle, ideal_cam_lift)
-    plot_SVA(
+    plot_S(
         cam_angle,
-        smooth_lift(ideal_cam_lift + cam_base_radius, 400),
+        ideal_cam_lift,
         None)
