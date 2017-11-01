@@ -7,7 +7,7 @@ from numpy import sin, cos
 
 # Params from a Huyabusa
 
-total_displacement = 1340 # cc
+total_displacement = 1600 # cc
 num_cylinders = 2
 disp_per_cylinder = total_displacement / num_cylinders # cubic centimeters
 
@@ -15,9 +15,14 @@ piston_orientation = [0, 0, 0, 0]
 
 cam_orientation = piston_orientation
 
-bore_to_stroke = 81.0 / 65.0
+# bore_to_stroke = 81.0 / 65.0
+bore = 10.464
+stroke = 8.72
+bore_to_stroke = bore / stroke
+
 
 bore = (4 * bore_to_stroke * disp_per_cylinder / pi)**(1/3) # centimeters
+
 bore_mm = bore * 10
 bore_in = bore_mm / 25.4
 stroke = (4 * disp_per_cylinder / (pi * bore_to_stroke**2))**(1/3) # centimeters

@@ -1,3 +1,4 @@
 *.png
 *.tbl
 **/__pycache__/
+external/

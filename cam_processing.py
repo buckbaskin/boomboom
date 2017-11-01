@@ -260,7 +260,7 @@ def fit_dwell_curve(angle, lift):
 
     initial_guess = [0, pi/2, pi/2, pi/2]
 
-    popt, pcov = optimize.curve_fit(rdfd, xdata, ydata, p0=initial_guess, bounds=bounds)
+    popt, pcov = optimize.curve_fit(rdfd, xdata, ydata, bounds=bounds)
 
     print('Optimized variables to:')
     print('Cam Advance: %.2f' % (popt[0] / pi * 180))
@@ -279,7 +279,7 @@ if __name__ == '__main__':
     ideal_cam_lift = load('cam.tbl', 'cam_lift')[:,1]
 
     # plot_FFT(cam_angle, ideal_cam_lift)
-    plot_S(
+    plot_SVA(
         cam_angle,
-        ideal_cam_lift,
+        fit_dwell_curve(cam_angle, ideal_cam_lift),
         None)
